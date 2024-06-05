@@ -1,6 +1,8 @@
 from flask import Flask, request, render_template, jsonify, send_from_directory
 from PIL import Image
 import os
+from eye import processEye
+from melanoma import processMelanoma
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
@@ -12,9 +14,17 @@ app.config['PROCESSED_FOLDER'] = PROCESSED_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
+
+@app.route('/p2')
+def index2():
+    return render_template('index2.html')
+
+
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -26,13 +36,22 @@ def upload_file():
     if file:
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(file_path)
+        filePath = processEye(file_path)
+        return jsonify({'url': filePath})
 
-        # Convert image to grayscale
-        image = Image.open(file_path).convert('L')
-        processed_file_path = os.path.join(app.config['PROCESSED_FOLDER'], file.filename)
-        image.save(processed_file_path)
+@app.route('/upload2', methods=['POST'])
+def upload_file2():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+    if file:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(file_path)
+        filePath = processMelanoma(file_path)
+        return jsonify({'url': filePath})
 
-        return jsonify({'url': f'/processed/{file.filename}'})
 
 @app.route('/processed/<filename>')
 def processed_file(filename):
