@@ -1,0 +1,11 @@
+on:
+  schedule:
+    - cron: '*/14 * * * *'
+  workflow_dispatch:
+
+jobs:
+  test_schedule:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every time
+        run: curl https://python-image-processing-ui.onrender.com
